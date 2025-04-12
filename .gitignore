@@ -1,0 +1,21 @@
+# Virtual environment
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Sensitive files
+.env
+*.env
+
+# IDE files
+.idea/
+.vscode/
+
+# Vector store data (if storing locally and don't want to commit)
+chroma_db/
+faiss_index/
+
+# Test artifacts
+.pytest_cache/
