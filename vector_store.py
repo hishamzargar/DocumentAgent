@@ -116,7 +116,7 @@ if __name__ == '__main__':
         print("\nSkipping query as vector store is empty.")
 
     
-    
+
 
 
 
