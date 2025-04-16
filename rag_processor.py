@@ -176,13 +176,15 @@ def add_document_to_store(file_path):
     if chunks:
         vector_store = get_vector_store()
         print(f"Adding {len(chunks)} chunks to vector store...")
-        returned_ids = None
         try:
+            print(f"vector_store.add_documents completed.")
+            # Log the count *after* persisting
             current_count = vector_store._collection.count()
-            print(f"Vector store count after add: {current_count}")
+            print(f"Vector store count after add/persists: {current_count}")
             print(f"Document {os.path.basename(file_path)} processed successfully up to count.")
         except Exception as e:
             print(f"ERROR occurred *during* or *immediately after* vector_store.add_documents: {e}")
+            traceback.print_exc()
             return False 
         return True
     else:
