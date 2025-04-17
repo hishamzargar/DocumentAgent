@@ -19,6 +19,6 @@ faiss_index/
 
 # Test artifacts
 .pytest_cache/
-tests/
+
 launch.json
 temp_uploads/
