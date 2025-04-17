@@ -6,9 +6,9 @@ from document_loader import load_document
 from text_splitter import split_documents
 
 
-
 CHROMA_DB_DIR = "chroma_db"
-COLLECTION_NAME= "documentagent_collection"
+COLLECTION_NAME = "documentagent_collection"
+
 
 def get_vector_store(embedding_function):
     """Initializes or loads the ChromaDB vector store."""
@@ -25,17 +25,18 @@ def get_vector_store(embedding_function):
 
     return vector_store, client
 
+
 def add_chunks_to_store(vector_store, chunks):
     if not chunks:
         print("No chunks to add.")
         return
-    
+
     print(f"Adding {len(chunks)} chunks to the vector store...")
 
     # Prepare data for ChromaDB: IDs, documents (text), and metadatas
     ids = [f"chunks_{i}" for i in range(len(chunks))]
-    documents= [chunk.page_content for chunk in chunks]
-    metadata= [chunk.metadata for chunk in chunks]
+    documents = [chunk.page_content for chunk in chunks]
+    metadata = [chunk.metadata for chunk in chunks]
 
     # Add to the collection (ChromaDB will use its configured embedding function)
     # If using ChromaDB directly *without* LangChain's wrapper, you'd configure
@@ -52,7 +53,6 @@ def add_chunks_to_store(vector_store, chunks):
         print(f"Error adding chunks: {e}")
 
 
-
 def query_vector_store(query, embedding_function, k=3):
     """Queries the vector store for relevant chunks."""
     print(f"\nQuerying store for: '{query}'")
@@ -60,7 +60,7 @@ def query_vector_store(query, embedding_function, k=3):
     vector_store = Chroma(
         persist_directory=CHROMA_DB_DIR,
         embedding_function=embedding_function,
-        collection_name=COLLECTION_NAME
+        collection_name=COLLECTION_NAME,
     )
 
     # Perform similarity search
@@ -70,22 +70,21 @@ def query_vector_store(query, embedding_function, k=3):
         print(f"Found {len(results)} relevant chunks:")
     else:
         print("No relevant chunks found.")
-    
+
     return results
 
 
-
-
-if __name__ == '__main__':
-
+if __name__ == "__main__":
 
     #  Get Embedding Function
     embed_func = get_embedding_function()
 
-    #Load and Split
+    # Load and Split
     if not os.path.exists("example.txt"):
-        with open("example.txt", 'w') as f:
-            f.write("This is a document about ChromaDB vector store.\nIt helps in storing and retrieving vector embeddings for text data using similarity search.")
+        with open("example.txt", "w") as f:
+            f.write(
+                "This is a document about ChromaDB vector store.\nIt helps in storing and retrieving vector embeddings for text data using similarity search."
+            )
 
         docs = load_document("example.txt")
         if docs:
@@ -99,9 +98,13 @@ if __name__ == '__main__':
                 # Clear collection before adding if running repeatedly for testing
 
                 try:
-                    print(f"Clearing collection '{COLLECTION_NAME}' before adding new chunks...")
+                    print(
+                        f"Clearing collection '{COLLECTION_NAME}' before adding new chunks..."
+                    )
                     client.delete_collection(name=COLLECTION_NAME)
-                    vector_store, client = get_vector_store(embed_func) #recreate after delete
+                    vector_store, client = get_vector_store(
+                        embed_func
+                    )  # recreate after delete
                     print("Collection cleared and recreated.")
                 except Exception as e:
                     print(f"Could not delete collection (may not exist yet): {e}")
@@ -114,23 +117,3 @@ if __name__ == '__main__':
         relevent_chunks = query_vector_store(query, k=2)
     else:
         print("\nSkipping query as vector store is empty.")
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-

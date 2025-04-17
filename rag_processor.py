@@ -1,15 +1,16 @@
 import os
 import sentence_transformers
-from langchain_community.document_loaders import PyPDFLoader, TextLoader 
+from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-#Import LCEL components
+
+# Import LCEL components
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough, RunnableLambda
 from langchain_core.output_parsers import StrOutputParser
 
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
-from langchain_openai import ChatOpenAI # Or your chosen LLM
+from langchain_openai import ChatOpenAI  # Or your chosen LLM
 from dotenv import load_dotenv
 
 from langchain_openai import AzureChatOpenAI
@@ -26,14 +27,16 @@ azure_deployment_name = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME")
 azure_api_version = "2024-12-01-preview"
 
 if not all([azure_endpoint, azure_key, azure_deployment_name]):
-    print("Warning: Azure OpenAI environment variables (ENDPOINT, KEY, DEPLOYMENT_NAME) not fully set.")
+    print(
+        "Warning: Azure OpenAI environment variables (ENDPOINT, KEY, DEPLOYMENT_NAME) not fully set."
+    )
 
 # Constants
 CHROMA_DB_DIR = "chroma_db"
 COLLECTION_NAME = "docuagent_collection"
 EMBEDDING_MODEL_NAME = "all-MiniLM-L6-v2"
 
-#check if llm key exists
+# check if llm key exists
 if os.getenv("OPENAI_API_KEY") is None:
     print("Warning: LLM API Key environment variable not set.")
 
@@ -43,28 +46,30 @@ _embedding_function = None
 _vector_store = None
 _rag_chain = None
 
+
 def get_embedding_function():
-    """ Initialize and return singleton embedding function"""
+    """Initialize and return singleton embedding function"""
     global _embedding_function
     if _embedding_function is None:
-       print(f"Initializing embedding model: {EMBEDDING_MODEL_NAME}")
-       _embedding_function = HuggingFaceEmbeddings(
-           model_name=EMBEDDING_MODEL_NAME, 
-           model_kwargs = {'device': 'cpu'})
-       print("Embedding model initialized.")
+        print(f"Initializing embedding model: {EMBEDDING_MODEL_NAME}")
+        _embedding_function = HuggingFaceEmbeddings(
+            model_name=EMBEDDING_MODEL_NAME, model_kwargs={"device": "cpu"}
+        )
+        print("Embedding model initialized.")
     return _embedding_function
+
 
 def get_vector_store():
     """Initializes and returns a singleton vector store instance."""
     global _vector_store
     if _vector_store is None:
         print(f"Accessing ChromaDB persistence directory: {CHROMA_DB_DIR}")
-        os.makedirs(CHROMA_DB_DIR, exist_ok=True) # Ensure directory exists
+        os.makedirs(CHROMA_DB_DIR, exist_ok=True)  # Ensure directory exists
         embedding_function = get_embedding_function()
         _vector_store = Chroma(
             persist_directory=CHROMA_DB_DIR,
             embedding_function=embedding_function,
-            collection_name=COLLECTION_NAME
+            collection_name=COLLECTION_NAME,
         )
         print(f"Vector store collection '{COLLECTION_NAME}' accessed/created.")
         try:
@@ -73,6 +78,7 @@ def get_vector_store():
             print(f"Could not get initial vector store count: {e}")
     return _vector_store
 
+
 def get_rag_chain():
     """Initializes and returns a singleton LCEL RAG chain."""
     global _rag_chain
@@ -80,11 +86,13 @@ def get_rag_chain():
         print("Initializing LCEL RAG chain")
 
         if not all([azure_endpoint, azure_key, azure_deployment_name]):
-             raise ValueError("Azure OpenAI environment variables not configured.")
-        
-        print(f"Initializing LCEL RAG chain with Azure OpenAI (Deployment: {azure_deployment_name})...")
+            raise ValueError("Azure OpenAI environment variables not configured.")
 
-        #1. Define prompt template
+        print(
+            f"Initializing LCEL RAG chain with Azure OpenAI (Deployment: {azure_deployment_name})..."
+        )
+
+        # 1. Define prompt template
         template = """Answer the following question based only on the provided context:
                     Context:
                     {context}
@@ -92,41 +100,40 @@ def get_rag_chain():
                     Answer:"""
         prompt = ChatPromptTemplate.from_template(template)
 
-        #2. Get Components
+        # 2. Get Components
         try:
             llm = AzureChatOpenAI(
                 azure_endpoint=azure_endpoint,
                 api_key=azure_key,
                 azure_deployment=azure_deployment_name,
                 api_version=azure_api_version,
-                temperature=0
+                temperature=0,
             )
             print("AzureChatOpenAI client initialized.")
         except Exception as e:
             print(f"Error initializing AzureChatOpenAI: {e}")
-            raise e # Re-raise the error to be caught by caller
+            raise e  # Re-raise the error to be caught by caller
         vector_store = get_vector_store()
         if vector_store is None:
             raise ValueError("Vector store not initialized. Cannot create RAG chain.")
         retriever = vector_store.as_retriever()
 
-        #3 format retrieved documents 
+        # 3 format retrieved documents
         def format_docs(docs):
             return "\n\n".join(doc.page_content for doc in docs)
-        
+
         def log_retrieved_docs(docs):
             print("\n--- Retrieved Documents ---")
             if not docs:
                 print("No documents retrieved.")
             for i, doc in enumerate(docs):
-                source = doc.metadata.get('source', 'N/A')
+                source = doc.metadata.get("source", "N/A")
                 # Limit preview length
-                content_preview = doc.page_content[:250].replace('\n', ' ') + "..."
+                content_preview = doc.page_content[:250].replace("\n", " ") + "..."
                 print(f"Doc {i+1}: Source='{source}', Preview='{content_preview}'")
             print("-------------------------\n")
-            return docs # MUST return the docs to pass them along the chain
+            return docs  # MUST return the docs to pass them along the chain
 
-        
         # 4. Construct the LCEL chain
         #    - Retrieve documents based on the question.
         #    - Format the documents into a single context string.
@@ -137,7 +144,7 @@ def get_rag_chain():
         _rag_chain = (
             {
                 "context": retriever | RunnableLambda(log_retrieved_docs) | format_docs,
-                "question": RunnablePassthrough()
+                "question": RunnablePassthrough(),
             }
             | prompt
             | llm
@@ -145,6 +152,7 @@ def get_rag_chain():
         )
         print("LCEL RAG chain initialized")
     return _rag_chain
+
 
 # Processing Function
 def load_and_split_document(file_path, chunk_size=1000, chunk_overlap=150):
@@ -157,10 +165,10 @@ def load_and_split_document(file_path, chunk_size=1000, chunk_overlap=150):
     if file_extension == ".pdf":
         loader = PyPDFLoader(file_path)
     elif file_extension == ".txt":
-        loader = TextLoader(file_path, encoding='utf-8')
+        loader = TextLoader(file_path, encoding="utf-8")
     else:
         print(f"Unsupported file format: {file_extension}")
-        return None # Indicate failure
+        return None  # Indicate failure
 
     if loader:
         try:
@@ -168,7 +176,7 @@ def load_and_split_document(file_path, chunk_size=1000, chunk_overlap=150):
             if not documents:
                 print("No content loaded from document.")
                 return None
-            
+
             text_splitter = RecursiveCharacterTextSplitter(
                 chunk_size=chunk_size,
                 chunk_overlap=chunk_overlap,
@@ -183,6 +191,7 @@ def load_and_split_document(file_path, chunk_size=1000, chunk_overlap=150):
             return None
     return None
 
+
 def add_document_to_store(file_path):
     """Loads, splits and adds documnet to the vector store"""
     chunks = load_and_split_document(file_path)
@@ -195,29 +204,36 @@ def add_document_to_store(file_path):
             # Log the count *after* persisting
             current_count = vector_store._collection.count()
             print(f"Vector store count after add: {current_count}")
-            print(f"Document {os.path.basename(file_path)} processed successfully up to count.")
+            print(
+                f"Document {os.path.basename(file_path)} processed successfully up to count."
+            )
         except Exception as e:
-            print(f"ERROR occurred *during* or *immediately after* vector_store.add_documents: {e}")
+            print(
+                f"ERROR occurred *during* or *immediately after* vector_store.add_documents: {e}"
+            )
             traceback.print_exc()
-            return False 
+            return False
         return True
     else:
         print(f"Failed to process document {os.path.basename(file_path)}.")
         return False
-    
+
 
 def query_documnents(query_text):
     """Queries the documents using the QA chain"""
     print(f"Received query: '{query_text}'")
     rag_chain = get_rag_chain()
-    vector_store  = get_vector_store()
+    vector_store = get_vector_store()
 
     # Optional: Check if vector store is empty before querying
     if vector_store._collection.count() == 0:
         print("Vector store is empty. Cannot answer query.")
-        return {"answer": "I haven't processed any documents yet. Please upload a document first.", "source_documents": []}
-    
-    #Invoke LCEL chain
+        return {
+            "answer": "I haven't processed any documents yet. Please upload a document first.",
+            "source_documents": [],
+        }
+
+    # Invoke LCEL chain
     try:
         print(f"Invoking LCEL RAG chain with query: '{query_text}'")
         # The LCEL chain as defined expects the query string directly as input
@@ -233,13 +249,12 @@ def query_documnents(query_text):
         print(f"Query answered (sources not retrieved in this basic LCEL setup).")
 
         return {f"answer": answer, "source_documents": formatted_sources}
-    
+
     except Exception as e:
         print(f"Error during LCEL RAG chain execution: {e}")
-        traceback.print_exc() # Print full traceback
+        traceback.print_exc()  # Print full traceback
         # Return structure consistent with expected QueryResponse
-        return {"answer": f"An error occurred during RAG chain execution: {e}", "source_documents": []}
-
-
-
-       
+        return {
+            "answer": f"An error occurred during RAG chain execution: {e}",
+            "source_documents": [],
+        }
