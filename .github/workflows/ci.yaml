@@ -49,6 +49,7 @@ jobs:
         # Add any other secrets your tests might need (e.g., GOOGLE_API_KEY if testing Gemini)
         # For tests not needing external APIs, you might mock the calls instead.
         TOKENIZERS_PARALLELISM: 'false' # Avoid tokenizer warnings in CI logs
+        PYTHONPATH: "${{ github.workspace }}"
       run: |
         # Create a dummy chroma_db directory needed by tests/app code
         mkdir chroma_db

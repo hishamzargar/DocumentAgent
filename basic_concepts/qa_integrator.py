@@ -2,7 +2,7 @@ import os
 from langchain.chains import retrieval_qa
 from langchain_openai import ChatOpenAI
 from langchain.vectorstores import Chroma
-from embedding_generator import get_embedding_function
+from basic_concepts.embedding_generator import get_embedding_function
 from dotenv import load_dotenv
 
 # load api keys

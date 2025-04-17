@@ -1,9 +1,9 @@
 import chromadb
 import os
 from langchain.vectorstores import Chroma
-from embedding_generator import get_embedding_function
-from document_loader import load_document
-from text_splitter import split_documents
+from basic_concepts.embedding_generator import get_embedding_function
+from basic_concepts.document_loader import load_document
+from basic_concepts.text_splitter import split_documents
 
 
 CHROMA_DB_DIR = "chroma_db"

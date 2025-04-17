@@ -9,7 +9,7 @@ import uvicorn
 from typing import Optional, List
 
 # import the rag logic
-from rag_processor import add_document_to_store, query_documnents, get_vector_store
+from app.rag_processor import add_document_to_store, query_documnents, get_vector_store
 
 # directory for uploads
 UPLOAD_DIR = "temp_uploads"

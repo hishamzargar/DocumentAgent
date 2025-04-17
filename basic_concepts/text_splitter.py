@@ -1,5 +1,5 @@
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from document_loader import load_document
+from basic_concepts.document_loader import load_document
 import os
 
 
