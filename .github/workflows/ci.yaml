@@ -48,13 +48,16 @@ jobs:
         AZURE_OPENAI_DEPLOYMENT_NAME: ${{ secrets.AZURE_OPENAI_DEPLOYMENT_NAME }}
         # Add any other secrets your tests might need (e.g., GOOGLE_API_KEY if testing Gemini)
         # For tests not needing external APIs, you might mock the calls instead.
-        TOKENIZERS_PARALLELISM: 'false' # Avoid tokenizer warnings in CI logs
         PYTHONPATH: "${{ github.workspace }}"
+        TOKENIZERS_PARALLELISM: 'false' # Avoid tokenizer warnings in CI logs
       run: |
-        # Create a dummy chroma_db directory needed by tests/app code
-        mkdir chroma_db
-        # Create dummy test files if your tests rely on them (adjust paths)
-        mkdir test_api_docs
-        echo "Test content for testing API." > test_api_docs/test_upload.txt
-        # Run tests
-        pytest
+        # Setup directories needed for tests (if any)
+        # mkdir chroma_db # Might not be needed if tests mock DB or handle creation
+        mkdir -p tests/test_data
+        echo "Test content for testing API." > tests/test_data/test_upload.txt
+
+        # Explicitly tell pytest where to find tests
+        pytest tests/
+
+        # Optionally, add verbosity for more detail if it still fails:
+        # pytest -v tests/
