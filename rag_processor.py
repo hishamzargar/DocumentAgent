@@ -21,7 +21,7 @@ load_dotenv()
 
 # --- Azure OpenAI Configuration ---
 azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
-azure_key = os.getenv("AZURE_OPENAI_KEY")
+azure_key = os.getenv("AZURE_OPENAI_API_KEY")
 azure_deployment_name = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME")
 azure_api_version = "2024-12-01-preview"
 
@@ -50,7 +50,7 @@ def get_embedding_function():
        print(f"Initializing embedding model: {EMBEDDING_MODEL_NAME}")
        _embedding_function = HuggingFaceEmbeddings(
            model_name=EMBEDDING_MODEL_NAME, 
-           model_kwargs = {'device': 'mps'})
+           model_kwargs = {'device': 'cpu'})
        print("Embedding model initialized.")
     return _embedding_function
 
@@ -114,6 +114,19 @@ def get_rag_chain():
         def format_docs(docs):
             return "\n\n".join(doc.page_content for doc in docs)
         
+        def log_retrieved_docs(docs):
+            print("\n--- Retrieved Documents ---")
+            if not docs:
+                print("No documents retrieved.")
+            for i, doc in enumerate(docs):
+                source = doc.metadata.get('source', 'N/A')
+                # Limit preview length
+                content_preview = doc.page_content[:250].replace('\n', ' ') + "..."
+                print(f"Doc {i+1}: Source='{source}', Preview='{content_preview}'")
+            print("-------------------------\n")
+            return docs # MUST return the docs to pass them along the chain
+
+        
         # 4. Construct the LCEL chain
         #    - Retrieve documents based on the question.
         #    - Format the documents into a single context string.
@@ -123,7 +136,7 @@ def get_rag_chain():
 
         _rag_chain = (
             {
-                "context": retriever | format_docs,
+                "context": retriever | RunnableLambda(log_retrieved_docs) | format_docs,
                 "question": RunnablePassthrough()
             }
             | prompt
@@ -174,13 +187,14 @@ def add_document_to_store(file_path):
     """Loads, splits and adds documnet to the vector store"""
     chunks = load_and_split_document(file_path)
     if chunks:
-        vector_store = get_vector_store()
-        print(f"Adding {len(chunks)} chunks to vector store...")
         try:
+            vector_store = get_vector_store()
+            print(f"Adding {len(chunks)} chunks to vector store...")
+            vector_store.add_documents(documents=chunks)
             print(f"vector_store.add_documents completed.")
             # Log the count *after* persisting
             current_count = vector_store._collection.count()
-            print(f"Vector store count after add/persists: {current_count}")
+            print(f"Vector store count after add: {current_count}")
             print(f"Document {os.path.basename(file_path)} processed successfully up to count.")
         except Exception as e:
             print(f"ERROR occurred *during* or *immediately after* vector_store.add_documents: {e}")

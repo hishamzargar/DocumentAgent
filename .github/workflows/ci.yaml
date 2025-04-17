@@ -1,0 +1,59 @@
+name: DocuAgent CI Pipeline
+
+# Run on pushes to the main branch and any pull requests
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest # Use the latest Ubuntu runner
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4 # Action to get your code
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.9' # Match the Python version used in Dockerfile/dev
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install flake8 black pytest # Ensure testing/linting tools are installed
+
+    - name: Lint with flake8
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    - name: Format Check with black
+      run: |
+        black --check .
+
+    - name: Run Pytest
+      # IMPORTANT: Tests needing API keys require secrets!
+      env:
+        # Load secrets from GitHub Repository Secrets
+        # You MUST add these secrets in your GitHub repo settings:
+        # Settings -> Secrets and variables -> Actions -> New repository secret
+        AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+        AZURE_OPENAI_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+        AZURE_OPENAI_DEPLOYMENT_NAME: ${{ secrets.AZURE_OPENAI_DEPLOYMENT_NAME }}
+        # Add any other secrets your tests might need (e.g., GOOGLE_API_KEY if testing Gemini)
+        # For tests not needing external APIs, you might mock the calls instead.
+        TOKENIZERS_PARALLELISM: 'false' # Avoid tokenizer warnings in CI logs
+      run: |
+        # Create a dummy chroma_db directory needed by tests/app code
+        mkdir chroma_db
+        # Create dummy test files if your tests rely on them (adjust paths)
+        mkdir test_api_docs
+        echo "Test content for testing API." > test_api_docs/test_upload.txt
+        # Run tests
+        pytest

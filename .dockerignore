@@ -1,0 +1,38 @@
+# Git files
+.git
+.gitignore
+
+# Docker related files (often not needed inside the image)
+Dockerfile
+.dockerignore
+
+# Python virtual environment
+venv/
+.venv/
+
+# Python cache/bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Secrets file(s) - CRITICAL
+.env
+*.env
+
+# Database / Persistent Data (handle with volumes at runtime)
+chroma_db/
+# faiss_index/ # If you were using FAISS
+
+# Test artifacts / data (usually not needed in final image)
+test_api_docs/
+.pytest_cache/
+
+# IDE / OS specific files
+.vscode/
+.idea/
+*.DS_Store
+
+# Add any other files/folders specific to your setup
+# *.log
+# temp_uploads/ # If this directory exists and isn't needed
