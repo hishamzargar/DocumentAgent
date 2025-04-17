@@ -56,6 +56,12 @@ jobs:
         mkdir -p tests/test_data
         echo "Test content for testing API." > tests/test_data/test_upload.txt
 
+        echo "Checking environment variables before pytest:"
+        echo "AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT}"         # Check if endpoint is set
+        echo "AZURE_OPENAI_KEY set: ${AZURE_OPENAI_KEY:+true}"       # Checks if KEY is set without printing it
+        echo "AZURE_OPENAI_DEPLOYMENT_NAME=${AZURE_OPENAI_DEPLOYMENT_NAME}"
+        echo "---"
+
         # Explicitly tell pytest where to find tests
         pytest tests/
 
