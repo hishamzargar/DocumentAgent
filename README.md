@@ -27,7 +27,8 @@ DocuAgent is an AI-powered application that allows you to upload documents (PDF 
 
 ## Project Structure
 
-**DocuAgentProject/**
+```text
+DocuAgentProject/
 ├── .github/            # GitHub Actions workflows
 │   └── workflows/
 │       └── ci.yaml
@@ -51,7 +52,7 @@ DocuAgent is an AI-powered application that allows you to upload documents (PDF 
 
 chroma_db/ <-- Created at runtime (ignored)
 temp_uploads/ <-- Created at runtime (ignored)
-
+```
 ## Setup and Installation
 
 **Prerequisites:**
