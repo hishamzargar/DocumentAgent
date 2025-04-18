@@ -26,7 +26,7 @@ DocuAgent is an AI-powered application that allows you to upload documents (PDF 
 * **Testing:** Pytest
 
 ## Project Structure
-DocuAgentProject/
+**DocuAgentProject/
 ├── .github/            # GitHub Actions workflows
 │   └── workflows/
 │       └── ci.yaml
@@ -46,7 +46,7 @@ DocuAgentProject/
 ├── launch.json         # VS Code debug config (optional)
 ├── requirements.txt    # Python dependencies
 ├── README.md           # This file
-└── venv/               # Python virtual environment (ignored)
+└── venv/               # Python virtual environment (ignored)**
 
 chroma_db/ <-- Created at runtime (ignored)
 temp_uploads/ <-- Created at runtime (ignored)
