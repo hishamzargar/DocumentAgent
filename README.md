@@ -26,27 +26,27 @@ DocuAgent is an AI-powered application that allows you to upload documents (PDF 
 * **Testing:** Pytest
 
 ## Project Structure
-**DocuAgentProject/
-├── .github/            # GitHub Actions workflows
-│   └── workflows/
-│       └── ci.yaml
-├── app/                # Core application source code
-│   ├── init.py
-│   ├── main.py         # FastAPI endpoints
-│   └── rag_processor.py  # RAG pipeline logic
-├── tests/              # Tests
-│   ├── init.py
-│   ├── test_api.py     # API tests
-│   └── test_data/      # Sample data for tests
-│       └── test_upload.txt
-├── .dockerignore       # Files ignored by Docker build
-├── .env.example        # Example environment variables
-├── .gitignore          # Files ignored by Git
-├── Dockerfile          # Docker build instructions
-├── launch.json         # VS Code debug config (optional)
-├── requirements.txt    # Python dependencies
-├── README.md           # This file
-└── venv/               # Python virtual environment (ignored)**
+**DocuAgentProject/**
+**├── .github/            # GitHub Actions workflows**
+**│   └── workflows/**
+**│       └── ci.yaml**
+**├── app/                # Core application source code**
+**│   ├── init.py**
+**│   ├── main.py         # FastAPI endpoints**
+**│   └── rag_processor.py  # RAG pipeline logic**
+**├── tests/              # Tests**
+**│   ├── init.py**
+**│   ├── test_api.py     # API tests**
+**│   └── test_data/      # Sample data for tests**
+**│       └── test_upload.txt**
+**├── .dockerignore       # Files ignored by Docker build**
+**├── .env.example        # Example environment variables**
+**├── .gitignore          # Files ignored by Git**
+**├── Dockerfile          # Docker build instructions**
+**├── launch.json         # VS Code debug config (optional)**
+**├── requirements.txt    # Python dependencies**
+**├── README.md           # This file**
+**└── venv/               # Python virtual environment (ignored)**
 
 chroma_db/ <-- Created at runtime (ignored)
 temp_uploads/ <-- Created at runtime (ignored)
